@@ -27,6 +27,7 @@
                         'slideUp': 'slideUp 0.4s ease-out',
                         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                         'bounce-subtle': 'bounceSubtle 0.6s ease-out',
+                        'rotate': 'rotate 8s linear infinite',
                     }
                 }
             }
@@ -53,6 +54,11 @@
         @keyframes bounceSubtle {
             0%, 100% { transform: translateY(0); }
             50% { transform: translateY(-2px); }
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
 
         .scrollbar-hide {
@@ -82,6 +88,11 @@
             background: linear-gradient(135deg, rgba(29, 185, 84, 0.1), rgba(255, 255, 255, 0.05));
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .song-item.playing {
+            background: linear-gradient(135deg, rgba(29, 185, 84, 0.2), rgba(255, 255, 255, 0.05));
+            border: 1px solid rgba(29, 185, 84, 0.3);
         }
 
         .sidebar-link {
@@ -140,6 +151,7 @@
             border-radius: 2px;
             overflow: hidden;
             background: rgba(255, 255, 255, 0.2);
+            cursor: pointer;
         }
 
         .progress-fill {
@@ -158,6 +170,37 @@
         .song-thumbnail:hover {
             transform: scale(1.05);
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .playing-animation {
+            animation: rotate 8s linear infinite;
+        }
+
+        .control-btn {
+            transition: all 0.2s ease;
+        }
+
+        .control-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .control-btn.active {
+            color: #1DB954;
+        }
+
+        .volume-slider {
+            width: 80px;
+            height: 4px;
+            border-radius: 2px;
+            background: rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+        }
+
+        .volume-fill {
+            height: 100%;
+            background: #1DB954;
+            border-radius: 2px;
+            transition: width 0.1s ease;
         }
     </style>
 </head>
@@ -246,42 +289,55 @@
     </div>
 
     <!-- Music Player -->
-    <div id="musicPlayer" class="fixed bottom-0 left-0 right-0 bg-spotify-gray p-4 border-t border-spotify-black hidden">
+    <div id="musicPlayer" class="fixed bottom-0 left-0 right-0 bg-spotify-gray p-4 border-t border-spotify-black hidden floating-player">
         <div class="flex items-center justify-between">
             <!-- Song Info -->
-            <div class="flex items-center flex-1">
+            <div class="flex items-center flex-1 min-w-0">
                 <img id="currentSongImage" class="w-14 h-14 rounded ml-4" src="" alt="">
-                <div>
-                    <h4 id="currentSongTitle" class="font-semibold text-white"></h4>
-                    <p id="currentSongArtist" class="text-spotify-lightgray text-sm"></p>
+                <div class="min-w-0">
+                    <h4 id="currentSongTitle" class="font-semibold text-white truncate"></h4>
+                    <p id="currentSongArtist" class="text-spotify-lightgray text-sm truncate"></p>
                 </div>
             </div>
 
             <!-- Player Controls -->
-            <div class="flex items-center space-x-4 space-x-reverse flex-1 justify-center">
-                <button id="prevBtn" class="text-spotify-lightgray hover:text-white">
-                    <i class="fas fa-step-backward"></i>
-                </button>
-                <button id="playPauseBtn" class="bg-white text-black w-10 h-10 rounded-full flex items-center justify-center hover:scale-105 transition-transform">
-                    <i class="fas fa-play"></i>
-                </button>
-                <button id="nextBtn" class="text-spotify-lightgray hover:text-white">
-                    <i class="fas fa-step-forward"></i>
-                </button>
+            <div class="flex flex-col items-center flex-1 max-w-lg">
+                <div class="flex items-center space-x-4 space-x-reverse mb-2">
+                    <button id="shuffleBtn" class="control-btn text-spotify-lightgray hover:text-white" title="پخش تصادفی">
+                        <i class="fas fa-random"></i>
+                    </button>
+                    <button id="prevBtn" class="control-btn text-spotify-lightgray hover:text-white">
+                        <i class="fas fa-step-backward"></i>
+                    </button>
+                    <button id="playPauseBtn" class="bg-white text-black w-10 h-10 rounded-full flex items-center justify-center hover:scale-105 transition-transform">
+                        <i class="fas fa-play"></i>
+                    </button>
+                    <button id="nextBtn" class="control-btn text-spotify-lightgray hover:text-white">
+                        <i class="fas fa-step-forward"></i>
+                    </button>
+                    <button id="repeatBtn" class="control-btn text-spotify-lightgray hover:text-white" title="تکرار">
+                        <i class="fas fa-redo"></i>
+                    </button>
+                </div>
+                
+                <!-- Progress Bar -->
+                <div class="flex items-center space-x-2 space-x-reverse w-full">
+                    <span id="currentTime" class="text-xs text-spotify-lightgray min-w-max">0:00</span>
+                    <div id="progressBarContainer" class="flex-1 progress-bar">
+                        <div id="progressBar" class="progress-fill" style="width: 0%"></div>
+                    </div>
+                    <span id="totalTime" class="text-xs text-spotify-lightgray min-w-max">0:00</span>
+                </div>
             </div>
 
-            <!-- Progress & Volume -->
+            <!-- Volume Control -->
             <div class="flex items-center space-x-4 space-x-reverse flex-1 justify-end">
-                <div class="flex items-center space-x-2 space-x-reverse">
-                    <span id="currentTime" class="text-xs text-spotify-lightgray">0:00</span>
-                    <div class="w-32 h-1 bg-spotify-lightgray rounded-full">
-                        <div id="progressBar" class="h-full bg-spotify-green rounded-full w-0"></div>
-                    </div>
-                    <span id="totalTime" class="text-xs text-spotify-lightgray">0:00</span>
-                </div>
-                <button class="text-spotify-lightgray hover:text-white">
+                <button id="volumeBtn" class="control-btn text-spotify-lightgray hover:text-white">
                     <i class="fas fa-volume-up"></i>
                 </button>
+                <div id="volumeSlider" class="volume-slider">
+                    <div id="volumeFill" class="volume-fill" style="width: 100%"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -302,7 +358,7 @@
             <div class="grid grid-cols-3 mb-6 bg-spotify-black rounded-xl p-1">
                 <button id="singleTab" class="tab-button active py-3 px-2 text-center font-semibold rounded-lg transition-all text-white">
                     <i class="fas fa-music ml-2"></i>
-                    لینک YouTube
+                    لینک آهنگ
                 </button>
                 <button id="bulkTab" class="tab-button py-3 px-2 text-center font-semibold rounded-lg transition-all text-spotify-lightgray">
                     <i class="fas fa-list-ul ml-2"></i>
@@ -335,9 +391,13 @@
                     
                     <div>
                         <label class="block text-sm font-semibold mb-3 text-spotify-lightgray">
-                            <i class="fab fa-youtube ml-2"></i>لینک YouTube
+                            <i class="fas fa-link ml-2"></i>لینک آهنگ
                         </label>
-                        <input type="url" id="youtubeUrl" class="w-full p-4 bg-spotify-black border border-spotify-lightgray rounded-xl text-base text-white focus:border-spotify-green focus:ring-2 focus:ring-spotify-green focus:ring-opacity-50 transition-all" placeholder="https://www.youtube.com/watch?v=..." required>
+                        <input type="url" id="songUrl" class="w-full p-4 bg-spotify-black border border-spotify-lightgray rounded-xl text-base text-white focus:border-spotify-green focus:ring-2 focus:ring-spotify-green focus:ring-opacity-50 transition-all" placeholder="لینک مستقیم آهنگ (MP3, WAV, YouTube, SoundCloud, ...)" required>
+                        <div class="mt-2 text-xs text-spotify-lightgray">
+                            <p>• پشتیبانی از YouTube, SoundCloud, و لینک‌های مستقیم</p>
+                            <p>• فرمت‌های پشتیبانی شده: MP3, WAV, OGG, M4A</p>
+                        </div>
                     </div>
                     
                     <div class="flex space-x-4 space-x-reverse pt-4">
@@ -362,7 +422,7 @@
                         </h4>
                         <div class="text-sm text-spotify-lightgray space-y-2">
                             <p>• هر خط یک آهنگ (حداکثر 100 آهنگ)</p>
-                            <p>• فرمت: <code class="bg-spotify-gray px-2 py-1 rounded">نام آهنگ | نام هنرمند | لینک YouTube</code></p>
+                            <p>• فرمت: <code class="bg-spotify-gray px-2 py-1 rounded">نام آهنگ | نام هنرمند | لینک آهنگ</code></p>
                             <p>• مثال: <code class="bg-spotify-gray px-2 py-1 rounded">Bad Guy | Billie Eilish | https://youtube.com/watch?v=DyDfgMOUjCI</code></p>
                         </div>
                     </div>
@@ -372,7 +432,7 @@
                             <i class="fas fa-list ml-2"></i>لیست آهنگ‌ها
                             <span id="songCount" class="text-spotify-green">(0/100)</span>
                         </label>
-                        <textarea id="bulkInput" class="w-full h-64 p-4 bg-spotify-black border border-spotify-lightgray rounded-xl text-base text-white focus:border-spotify-green focus:ring-2 focus:ring-spotify-green focus:ring-opacity-50 transition-all resize-none font-mono" placeholder="نام آهنگ | نام هنرمند | لینک YouTube
+                        <textarea id="bulkInput" class="w-full h-64 p-4 bg-spotify-black border border-spotify-lightgray rounded-xl text-base text-white focus:border-spotify-green focus:ring-2 focus:ring-spotify-green focus:ring-opacity-50 transition-all resize-none font-mono" placeholder="نام آهنگ | نام هنرمند | لینک آهنگ
 Bad Guy | Billie Eilish | https://youtube.com/watch?v=DyDfgMOUjCI
 Blinding Lights | The Weeknd | https://youtube.com/watch?v=4NRXx6U8ABQ"></textarea>
                     </div>
@@ -479,6 +539,9 @@ Blinding Lights | The Weeknd | https://youtube.com/watch?v=4NRXx6U8ABQ"></textar
         </div>
     </div>
 
+    <!-- Hidden Audio Element -->
+    <audio id="audioPlayer" preload="metadata"></audio>
+
     <script>
         // Dark mode detection
         if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
@@ -496,7 +559,9 @@ Blinding Lights | The Weeknd | https://youtube.com/watch?v=4NRXx6U8ABQ"></textar
         let songs = [];
         let currentSongIndex = -1;
         let isPlaying = false;
-        let currentPlayer = null;
+        let repeatMode = 'none'; // 'none', 'all', 'one'
+        let isShuffle = false;
+        let currentVolume = 1;
 
         // DOM elements
         const addMusicBtn = document.getElementById('addMusicBtn');
@@ -506,15 +571,92 @@ Blinding Lights | The Weeknd | https://youtube.com/watch?v=4NRXx6U8ABQ"></textar
         const addMusicForm = document.getElementById('addMusicForm');
         const songsContainer = document.getElementById('songsContainer');
         const musicPlayer = document.getElementById('musicPlayer');
+        const audioPlayer = document.getElementById('audioPlayer');
         const playPauseBtn = document.getElementById('playPauseBtn');
         const prevBtn = document.getElementById('prevBtn');
         const nextBtn = document.getElementById('nextBtn');
+        const shuffleBtn = document.getElementById('shuffleBtn');
+        const repeatBtn = document.getElementById('repeatBtn');
+        const progressBarContainer = document.getElementById('progressBarContainer');
+        const progressBar = document.getElementById('progressBar');
+        const currentTimeEl = document.getElementById('currentTime');
+        const totalTimeEl = document.getElementById('totalTime');
+        const volumeBtn = document.getElementById('volumeBtn');
+        const volumeSlider = document.getElementById('volumeSlider');
+        const volumeFill = document.getElementById('volumeFill');
 
-        // Extract YouTube video ID
-        function extractYouTubeId(url) {
-            const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
-            const match = url.match(regex);
-            return match ? match[1] : null;
+        // Extract video ID from URLs
+        function extractVideoId(url) {
+            // YouTube
+            const youtubeRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+            const youtubeMatch = url.match(youtubeRegex);
+            if (youtubeMatch) return { type: 'youtube', id: youtubeMatch[1] };
+
+            // SoundCloud or direct audio
+            if (url.includes('soundcloud.com') || url.match(/\.(mp3|wav|ogg|m4a|flac)(\?|$)/i)) {
+                return { type: 'direct', id: url };
+            }
+
+            return { type: 'direct', id: url };
+        }
+
+        // Get audio URL from video info
+        function getAudioUrl(videoInfo) {
+            if (videoInfo.type === 'youtube') {
+                // For YouTube, we'll use a placeholder URL since we can't extract audio directly
+                // In a real app, you'd need a backend service to extract audio
+                return `https://www.youtube.com/embed/${videoInfo.id}`;
+            }
+            return videoInfo.id; // Direct URL
+        }
+
+        // Format time
+        function formatTime(seconds) {
+            if (!seconds || isNaN(seconds)) return '0:00';
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        // Update progress bar
+        function updateProgress() {
+            if (!audioPlayer.duration) return;
+            const progress = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+            progressBar.style.width = `${progress}%`;
+            currentTimeEl.textContent = formatTime(audioPlayer.currentTime);
+            totalTimeEl.textContent = formatTime(audioPlayer.duration);
+        }
+
+        // Set progress
+        function setProgress(e) {
+            const rect = progressBarContainer.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const width = rect.width;
+            const progress = clickX / width;
+            audioPlayer.currentTime = progress * audioPlayer.duration;
+        }
+
+        // Update volume
+        function updateVolume() {
+            audioPlayer.volume = currentVolume;
+            volumeFill.style.width = `${currentVolume * 100}%`;
+            
+            if (currentVolume === 0) {
+                volumeBtn.innerHTML = '<i class="fas fa-volume-mute"></i>';
+            } else if (currentVolume < 0.5) {
+                volumeBtn.innerHTML = '<i class="fas fa-volume-down"></i>';
+            } else {
+                volumeBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
+            }
+        }
+
+        // Set volume
+        function setVolume(e) {
+            const rect = volumeSlider.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const width = rect.width;
+            currentVolume = Math.max(0, Math.min(1, clickX / width));
+            updateVolume();
         }
 
         // Show modal
@@ -530,19 +672,6 @@ Blinding Lights | The Weeknd | https://youtube.com/watch?v=4NRXx6U8ABQ"></textar
             addMusicForm.reset();
         }
 
-        // Create YouTube player
-        function createYouTubePlayer(videoId, container) {
-            const iframe = document.createElement('iframe');
-            iframe.src = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&controls=0&showinfo=0&rel=0&autoplay=0`;
-            iframe.style.width = '0px';
-            iframe.style.height = '0px';
-            iframe.style.opacity = '0';
-            iframe.style.position = 'absolute';
-            iframe.style.pointerEvents = 'none';
-            container.appendChild(iframe);
-            return iframe;
-        }
-
         // Play song
         function playSong(index) {
             if (index < 0 || index >= songs.length) return;
@@ -553,17 +682,35 @@ Blinding Lights | The Weeknd | https://youtube.com/watch?v=4NRXx6U8ABQ"></textar
             // Update player UI
             document.getElementById('currentSongTitle').textContent = song.title;
             document.getElementById('currentSongArtist').textContent = song.artist;
-            document.getElementById('currentSongImage').src = `https://img.youtube.com/vi/${song.videoId}/mqdefault.jpg`;
+            document.getElementById('currentSongImage').src = song.thumbnail;
             
             // Show player
             musicPlayer.classList.remove('hidden');
             
+            // Load audio
+            if (song.isLocalFile) {
+                audioPlayer.src = song.localFileUrl;
+            } else if (song.videoInfo.type === 'youtube') {
+                // For YouTube, we'd need a proper audio extraction service
+                // For now, we'll show an alert
+                showAlert('پخش مستقیم از YouTube در حال حاضر پشتیبانی نمی‌شود. لطفاً لینک مستقیم آهنگ استفاده کنید.');
+                return;
+            } else {
+                audioPlayer.src = song.videoInfo.id;
+            }
+
             // Update play button
             playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
             isPlaying = true;
 
             // Highlight current song
             updateSongHighlight();
+
+            // Play audio
+            audioPlayer.play().catch(e => {
+                console.error('Error playing audio:', e);
+                showAlert('خطا در پخش آهنگ. لطفاً لینک را بررسی کنید.');
+            });
         }
 
         // Update song highlight
@@ -571,47 +718,135 @@ Blinding Lights | The Weeknd | https://youtube.com/watch?v=4NRXx6U8ABQ"></textar
             const songItems = document.querySelectorAll('.song-item');
             songItems.forEach((item, index) => {
                 if (index === currentSongIndex) {
-                    item.classList.add('bg-spotify-green', 'bg-opacity-20');
+                    item.classList.add('playing');
+                    const thumbnail = item.querySelector('.song-thumbnail');
+                    if (thumbnail) {
+                        thumbnail.classList.add('playing-animation');
+                    }
                 } else {
-                    item.classList.remove('bg-spotify-green', 'bg-opacity-20');
+                    item.classList.remove('playing');
+                    const thumbnail = item.querySelector('.song-thumbnail');
+                    if (thumbnail) {
+                        thumbnail.classList.remove('playing-animation');
+                    }
                 }
             });
         }
 
         // Toggle play/pause
         function togglePlayPause() {
+            if (currentSongIndex === -1) return;
+            
+            if (isPlaying) {
+                audioPlayer.pause();
+                playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+            } else {
+                audioPlayer.play();
+                playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+            }
             isPlaying = !isPlaying;
-            playPauseBtn.innerHTML = isPlaying ? '<i class="fas fa-pause"></i>' : '<i class="fas fa-play"></i>';
         }
 
         // Previous song
         function prevSong() {
-            if (currentSongIndex > 0) {
-                playSong(currentSongIndex - 1);
+            if (songs.length === 0) return;
+            
+            let newIndex;
+            if (isShuffle) {
+                newIndex = Math.floor(Math.random() * songs.length);
+            } else {
+                newIndex = currentSongIndex > 0 ? currentSongIndex - 1 : songs.length - 1;
             }
+            playSong(newIndex);
         }
 
         // Next song
         function nextSong() {
-            if (currentSongIndex < songs.length - 1) {
-                playSong(currentSongIndex + 1);
+            if (songs.length === 0) return;
+            
+            let newIndex;
+            if (isShuffle) {
+                newIndex = Math.floor(Math.random() * songs.length);
+            } else {
+                newIndex = currentSongIndex < songs.length - 1 ? currentSongIndex + 1 : 0;
+            }
+            playSong(newIndex);
+        }
+
+        // Toggle shuffle
+        function toggleShuffle() {
+            isShuffle = !isShuffle;
+            if (isShuffle) {
+                shuffleBtn.classList.add('active');
+            } else {
+                shuffleBtn.classList.remove('active');
+            }
+        }
+
+        // Toggle repeat
+        function toggleRepeat() {
+            const modes = ['none', 'all', 'one'];
+            const currentIndex = modes.indexOf(repeatMode);
+            repeatMode = modes[(currentIndex + 1) % modes.length];
+            
+            repeatBtn.classList.remove('active');
+            switch (repeatMode) {
+                case 'none':
+                    repeatBtn.innerHTML = '<i class="fas fa-redo"></i>';
+                    break;
+                case 'all':
+                    repeatBtn.innerHTML = '<i class="fas fa-redo"></i>';
+                    repeatBtn.classList.add('active');
+                    break;
+                case 'one':
+                    repeatBtn.innerHTML = '<i class="fas fa-redo-alt"></i>';
+                    repeatBtn.classList.add('active');
+                    break;
+            }
+        }
+
+        // Handle song end
+        function handleSongEnd() {
+            if (repeatMode === 'one') {
+                audioPlayer.currentTime = 0;
+                audioPlayer.play();
+            } else if (repeatMode === 'all') {
+                nextSong();
+            } else {
+                if (currentSongIndex < songs.length - 1) {
+                    nextSong();
+                } else {
+                    isPlaying = false;
+                    playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+                }
+            }
+        }
+
+        // Toggle volume mute
+        function toggleMute() {
+            if (currentVolume > 0) {
+                audioPlayer.volume = 0;
+                volumeFill.style.width = '0%';
+                volumeBtn.innerHTML = '<i class="fas fa-volume-mute"></i>';
+            } else {
+                currentVolume = 0.5;
+                updateVolume();
             }
         }
 
         // Add song to list
-        function addSong(title, artist, youtubeUrl) {
-            const videoId = extractYouTubeId(youtubeUrl);
-            if (!videoId) {
-                showAlert('لینک YouTube معتبر نیست');
-                return false;
-            }
-
+        function addSong(title, artist, songUrl) {
+            const videoInfo = extractVideoId(songUrl);
+            
             const song = {
                 title,
                 artist,
-                youtubeUrl,
-                videoId,
-                thumbnail: `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`
+                songUrl,
+                videoInfo,
+                thumbnail: videoInfo.type === 'youtube' ? 
+                    `https://img.youtube.com/vi/${videoInfo.id}/mqdefault.jpg` : 
+                    'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiBmaWxsPSIjMjgyODI4Ii8+CjxwYXRoIGQ9Ik00MCA2MEw2MCA1MEw0MCA0MFY2MFoiIGZpbGw9IiMxREI5NTQiLz4KPHN2Zz4K',
+                isLocalFile: false
             };
 
             songs.push(song);
@@ -665,8 +900,8 @@ Blinding Lights | The Weeknd | https://youtube.com/watch?v=4NRXx6U8ABQ"></textar
                         <button class="text-spotify-lightgray hover:text-red-400 p-3 rounded-full hover:bg-red-600 hover:bg-opacity-20 transition-all opacity-0 group-hover:opacity-100" onclick="event.stopPropagation(); removeSong(${index})" title="حذف آهنگ">
                             <i class="fas fa-trash"></i>
                         </button>
-                        <button class="text-spotify-lightgray hover:text-spotify-green p-3 rounded-full hover:bg-spotify-green hover:bg-opacity-20 transition-all opacity-0 group-hover:opacity-100" onclick="event.stopPropagation(); window.open('${song.youtubeUrl}', '_blank')" title="مشاهده در YouTube">
-                            <i class="fab fa-youtube"></i>
+                        <button class="text-spotify-lightgray hover:text-spotify-green p-3 rounded-full hover:bg-spotify-green hover:bg-opacity-20 transition-all opacity-0 group-hover:opacity-100" onclick="event.stopPropagation(); window.open('${song.songUrl}', '_blank')" title="مشاهده لینک اصلی">
+                            <i class="fas fa-external-link-alt"></i>
                         </button>
                         <span class="text-spotify-lightgray text-sm font-mono">3:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}</span>
                     </div>
@@ -680,6 +915,8 @@ Blinding Lights | The Weeknd | https://youtube.com/watch?v=4NRXx6U8ABQ"></textar
             if (currentSongIndex === index) {
                 musicPlayer.classList.add('hidden');
                 currentSongIndex = -1;
+                audioPlayer.pause();
+                audioPlayer.src = '';
             } else if (currentSongIndex > index) {
                 currentSongIndex--;
             }
@@ -722,14 +959,17 @@ Blinding Lights | The Weeknd | https://youtube.com/watch?v=4NRXx6U8ABQ"></textar
         const MAX_FILES = 50;
         const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 
-        function switchTab(activeTab, inactiveTab, activeForm, inactiveForm) {
+        function switchTab(activeTab, inactiveTab1, inactiveTab2, activeForm, inactiveForm1, inactiveForm2) {
             activeTab.classList.add('active', 'text-white');
             activeTab.classList.remove('text-spotify-lightgray');
-            inactiveTab.classList.remove('active', 'text-white');
-            inactiveTab.classList.add('text-spotify-lightgray');
+            inactiveTab1.classList.remove('active', 'text-white');
+            inactiveTab1.classList.add('text-spotify-lightgray');
+            inactiveTab2.classList.remove('active', 'text-white');
+            inactiveTab2.classList.add('text-spotify-lightgray');
             
             activeForm.classList.remove('hidden');
-            inactiveForm.classList.add('hidden');
+            inactiveForm1.classList.add('hidden');
+            inactiveForm2.classList.add('hidden');
         }
 
         // Parse bulk input
@@ -751,13 +991,7 @@ Blinding Lights | The Weeknd | https://youtube.com/watch?v=4NRXx6U8ABQ"></textar
                     return;
                 }
 
-                const videoId = extractYouTubeId(url);
-                if (!videoId) {
-                    errors.push(`خط ${index + 1}: لینک YouTube نامعتبر`);
-                    return;
-                }
-
-                songs.push({ title, artist, url, videoId });
+                songs.push({ title, artist, url });
             });
 
             return { songs, errors };
@@ -1021,8 +1255,8 @@ Blinding Lights | The Weeknd | https://youtube.com/watch?v=4NRXx6U8ABQ"></textar
             const song = {
                 title: metadata.title,
                 artist: metadata.artist,
-                youtubeUrl: null,
-                videoId: null,
+                songUrl: null,
+                videoInfo: null,
                 thumbnail: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiBmaWxsPSIjMjgyODI4Ii8+CjxwYXRoIGQ9Ik00MCA2MEw2MCA1MEw0MCA0MFY2MFoiIGZpbGw9IiMxREI5NTQiLz4KPHN2Zz4K',
                 isLocalFile: true,
                 localFileUrl: metadata.url,
@@ -1119,19 +1353,47 @@ Blinding Lights | The Weeknd | https://youtube.com/watch?v=4NRXx6U8ABQ"></textar
         closeModal.addEventListener('click', hideModal);
         cancelBtn.addEventListener('click', hideModal);
 
+        // Tab navigation
         singleTab.addEventListener('click', () => {
-            switchTab(singleTab, bulkTab, singleForm, bulkForm);
-            switchTab(singleTab, fileTab, singleForm, fileForm);
+            switchTab(singleTab, bulkTab, fileTab, singleForm, bulkForm, fileForm);
         });
 
         bulkTab.addEventListener('click', () => {
-            switchTab(bulkTab, singleTab, bulkForm, singleForm);
-            switchTab(bulkTab, fileTab, bulkForm, fileForm);
+            switchTab(bulkTab, singleTab, fileTab, bulkForm, singleForm, fileForm);
         });
 
         fileTab.addEventListener('click', () => {
-            switchTab(fileTab, singleTab, fileForm, singleForm);
-            switchTab(fileTab, bulkTab, fileForm, bulkForm);
+            switchTab(fileTab, singleTab, bulkTab, fileForm, singleForm, bulkForm);
+        });
+
+        // Player controls
+        playPauseBtn.addEventListener('click', togglePlayPause);
+        prevBtn.addEventListener('click', prevSong);
+        nextBtn.addEventListener('click', nextSong);
+        shuffleBtn.addEventListener('click', toggleShuffle);
+        repeatBtn.addEventListener('click', toggleRepeat);
+        volumeBtn.addEventListener('click', toggleMute);
+
+        // Progress and volume controls
+        progressBarContainer.addEventListener('click', setProgress);
+        volumeSlider.addEventListener('click', setVolume);
+
+        // Audio events
+        audioPlayer.addEventListener('loadedmetadata', () => {
+            totalTimeEl.textContent = formatTime(audioPlayer.duration);
+        });
+
+        audioPlayer.addEventListener('timeupdate', updateProgress);
+        audioPlayer.addEventListener('ended', handleSongEnd);
+
+        audioPlayer.addEventListener('play', () => {
+            isPlaying = true;
+            playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+        });
+
+        audioPlayer.addEventListener('pause', () => {
+            isPlaying = false;
+            playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
         });
 
         // File upload events
@@ -1176,9 +1438,7 @@ Blinding Lights | The Weeknd | https://youtube.com/watch?v=4NRXx6U8ABQ"></textar
         processFilesBtn.addEventListener('click', processFiles);
 
         bulkInput.addEventListener('input', updateSongCount);
-
         bulkAddBtn.addEventListener('click', bulkAddSongs);
-
         clearBulkBtn.addEventListener('click', () => {
             bulkInput.value = '';
             updateSongCount();
@@ -1190,16 +1450,12 @@ Blinding Lights | The Weeknd | https://youtube.com/watch?v=4NRXx6U8ABQ"></textar
             e.preventDefault();
             const title = document.getElementById('songTitle').value;
             const artist = document.getElementById('artistName').value;
-            const youtubeUrl = document.getElementById('youtubeUrl').value;
+            const songUrl = document.getElementById('songUrl').value;
 
-            if (addSong(title, artist, youtubeUrl)) {
+            if (addSong(title, artist, songUrl)) {
                 hideModal();
             }
         });
-
-        playPauseBtn.addEventListener('click', togglePlayPause);
-        prevBtn.addEventListener('click', prevSong);
-        nextBtn.addEventListener('click', nextSong);
 
         // Close modal on outside click
         addMusicModal.addEventListener('click', (e) => {
@@ -1212,6 +1468,7 @@ Blinding Lights | The Weeknd | https://youtube.com/watch?v=4NRXx6U8ABQ"></textar
         renderSongs();
         updateSongCount();
         updateFileCount();
+        updateVolume();
     </script>
 </body>
 </html>
