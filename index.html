@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matinfy - موزیک شخصی شما</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        spotify: {
+                            green: '#1DB954',
+                            black: '#191414',
+                            dark: '#121212',
+                            gray: '#282828',
+                            lightgray: '#b3b3b3'
+                        }
+                    },
+                    fontFamily: {
+                        'vazir': ['Vazirmatn', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+                    },
+                    animation: {
+                        'fadeIn': 'fadeIn 0.3s ease-in-out',
+                        'slideUp': 'slideUp 0.4s ease-out',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'bounce-subtle': 'bounceSubtle 0.6s ease-out',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@200;300;400;500;600;700;800;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            font-family: 'Vazirmatn', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes bounceSubtle {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-2px); }
+        }
+
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+
+        .progress-bar {
+            background: linear-gradient(90deg, #1DB954 0%, #1DB954 var(--progress, 0%), #4d4d4d var(--progress, 0%), #4d4d4d 100%);
+        }
+
+        .glass-effect {
+            backdrop-filter: blur(20px);
+            background: rgba(25, 20, 20, 0.85);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .song-item {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 12px;
+        }
+
+        .song-item:hover {
+            background: linear-gradient(135deg, rgba(29, 185, 84, 0.1), rgba(255, 255, 255, 0.05));
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .sidebar-link {
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin: 4px 0;
+        }
+
+        .sidebar-link:hover {
+            color: #1DB954;
+            background: rgba(29, 185, 84, 0.1);
+            transform: translateX(-4px);
+        }
+
+        .modal {
+            backdrop-filter: blur(12px);
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #1DB954, #1ed760);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 15px rgba(29, 185, 84, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(29, 185, 84, 0.4);
+        }
+
+        .tab-button {
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .tab-button.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #1DB954, #1ed760);
+            border-radius: 2px;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        .floating-player {
+            animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 -4px 25px rgba(0, 0, 0, 0.4);
+        }
+
+        .progress-bar {
+            height: 4px;
+            border-radius: 2px;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #1DB954, #1ed760);
+            border-radius: 2px;
+            transition: width 0.1s ease;
+        }
+
+        .song-thumbnail {
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .song-thumbnail:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+        }
+    </style>
+</head>
+<body class="bg-spotify-dark text-white overflow-hidden">
+    <!-- Main Container -->
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <div class="w-64 bg-spotify-black p-6 flex flex-col">
+            <!-- Logo -->
+            <div class="flex items-center mb-8">
+                <i class="fas fa-music text-spotify-green text-2xl ml-3"></i>
+                <h1 class="text-2xl font-bold">Matinfy</h1>
+            </div>
+
+            <!-- Navigation -->
+            <nav class="flex-1">
+                <ul class="space-y-4">
+                    <li>
+                        <a href="#" class="sidebar-link flex items-center text-spotify-lightgray hover:text-white transition-colors">
+                            <i class="fas fa-home w-6 ml-3"></i>
+                            خانه
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="sidebar-link flex items-center text-spotify-lightgray hover:text-white transition-colors">
+                            <i class="fas fa-search w-6 ml-3"></i>
+                            جستجو
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="sidebar-link flex items-center text-spotify-lightgray hover:text-white transition-colors">
+                            <i class="fas fa-list w-6 ml-3"></i>
+                            کتابخانه شما
+                        </a>
+                    </li>
+                </ul>
+
+                <div class="mt-8">
+                    <h3 class="text-spotify-lightgray text-sm font-semibold mb-4">پلی لیست ها</h3>
+                    <ul class="space-y-2" id="playlistList">
+                        <li>
+                            <a href="#" class="sidebar-link block text-spotify-lightgray hover:text-white transition-colors">
+                                آهنگ های مورد علاقه
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- Add Music Button -->
+            <button id="addMusicBtn" class="btn-primary w-full text-white py-3 px-4 rounded-full font-semibold flex items-center justify-center">
+                <i class="fas fa-plus ml-2"></i>
+                افزودن موزیک
+            </button>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col">
+            <!-- Header -->
+            <header class="bg-gradient-to-b from-spotify-gray to-transparent p-6">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4 space-x-reverse">
+                        <button class="p-2 bg-spotify-black rounded-full text-spotify-lightgray hover:text-white">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                        <button class="p-2 bg-spotify-black rounded-full text-spotify-lightgray hover:text-white">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                    </div>
+                    <h2 class="text-3xl font-bold">موزیک های شما</h2>
+                </div>
+            </header>
+
+            <!-- Songs List -->
+            <main class="flex-1 p-6 overflow-y-auto scrollbar-hide">
+                <div id="songsContainer">
+                    <!-- Songs will be dynamically added here -->
+                    <div class="text-center text-spotify-lightgray py-20">
+                        <i class="fas fa-music text-6xl mb-4 opacity-50"></i>
+                        <p class="text-xl">هنوز موزیکی اضافه نکرده‌اید</p>
+                        <p class="text-sm mt-2">روی دکمه "افزودن موزیک" کلیک کنید تا شروع کنید</p>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Music Player -->
+    <div id="musicPlayer" class="fixed bottom-0 left-0 right-0 bg-spotify-gray p-4 border-t border-spotify-black hidden">
+        <div class="flex items-center justify-between">
+            <!-- Song Info -->
+            <div class="flex items-center flex-1">
+                <img id="currentSongImage" class="w-14 h-14 rounded ml-4" src="" alt="">
+                <div>
+                    <h4 id="currentSongTitle" class="font-semibold text-white"></h4>
+                    <p id="currentSongArtist" class="text-spotify-lightgray text-sm"></p>
+                </div>
+            </div>
+
+            <!-- Player Controls -->
+            <div class="flex items-center space-x-4 space-x-reverse flex-1 justify-center">
+                <button id="prevBtn" class="text-spotify-lightgray hover:text-white">
+                    <i class="fas fa-step-backward"></i>
+                </button>
+                <button id="playPauseBtn" class="bg-white text-black w-10 h-10 rounded-full flex items-center justify-center hover:scale-105 transition-transform">
+                    <i class="fas fa-play"></i>
+                </button>
+                <button id="nextBtn" class="text-spotify-lightgray hover:text-white">
+                    <i class="fas fa-step-forward"></i>
+                </button>
+            </div>
+
+            <!-- Progress & Volume -->
+            <div class="flex items-center space-x-4 space-x-reverse flex-1 justify-end">
+                <div class="flex items-center space-x-2 space-x-reverse">
+                    <span id="currentTime" class="text-xs text-spotify-lightgray">0:00</span>
+                    <div class="w-32 h-1 bg-spotify-lightgray rounded-full">
+                        <div id="progressBar" class="h-full bg-spotify-green rounded-full w-0"></div>
+                    </div>
+                    <span id="totalTime" class="text-xs text-spotify-lightgray">0:00</span>
+                </div>
+                <button class="text-spotify-lightgray hover:text-white">
+                    <i class="fas fa-volume-up"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Music Modal -->
+    <div id="addMusicModal" class="fixed inset-0 bg-black bg-opacity-50 modal hidden items-center justify-center z-50">
+        <div class="glass-effect p-8 rounded-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto scrollbar-hide">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-2xl font-bold bg-gradient-to-r from-white to-spotify-green bg-clip-text text-transparent">
+                    افزودن موزیک
+                </h3>
+                <button id="closeModal" class="text-spotify-lightgray hover:text-white transition-colors p-2 rounded-full hover:bg-spotify-black">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <!-- Tab Navigation -->
+            <div class="flex mb-6 bg-spotify-black rounded-xl p-1">
+                <button id="singleTab" class="tab-button active flex-1 py-3 px-4 text-center font-semibold rounded-lg transition-all text-white">
+                    <i class="fas fa-music ml-2"></i>
+                    تک آهنگ
+                </button>
+                <button id="bulkTab" class="tab-button flex-1 py-3 px-4 text-center font-semibold rounded-lg transition-all text-spotify-lightgray">
+                    <i class="fas fa-list-ul ml-2"></i>
+                    آپلود دسته‌ای
+                </button>
+            </div>
+
+            <!-- Single Song Form -->
+            <div id="singleForm" class="tab-content">
+                <form id="addMusicForm" class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold mb-3 text-spotify-lightgray">
+                                <i class="fas fa-music ml-2"></i>نام آهنگ
+                            </label>
+                            <input type="text" id="songTitle" class="w-full p-4 bg-spotify-black border border-spotify-lightgray rounded-xl text-base text-white focus:border-spotify-green focus:ring-2 focus:ring-spotify-green focus:ring-opacity-50 transition-all" placeholder="نام آهنگ را وارد کنید" required>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-semibold mb-3 text-spotify-lightgray">
+                                <i class="fas fa-user ml-2"></i>نام هنرمند
+                            </label>
+                            <input type="text" id="artistName" class="w-full p-4 bg-spotify-black border border-spotify-lightgray rounded-xl text-base text-white focus:border-spotify-green focus:ring-2 focus:ring-spotify-green focus:ring-opacity-50 transition-all" placeholder="نام هنرمند را وارد کنید" required>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-semibold mb-3 text-spotify-lightgray">
+                            <i class="fab fa-youtube ml-2"></i>لینک YouTube
+                        </label>
+                        <input type="url" id="youtubeUrl" class="w-full p-4 bg-spotify-black border border-spotify-lightgray rounded-xl text-base text-white focus:border-spotify-green focus:ring-2 focus:ring-spotify-green focus:ring-opacity-50 transition-all" placeholder="https://www.youtube.com/watch?v=..." required>
+                    </div>
+                    
+                    <div class="flex space-x-4 space-x-reverse pt-4">
+                        <button type="submit" class="btn-primary flex-1 text-white py-4 px-6 rounded-xl font-semibold flex items-center justify-center">
+                            <i class="fas fa-plus ml-2"></i>
+                            افزودن آهنگ
+                        </button>
+                        <button type="button" id="cancelBtn" class="flex-1 bg-transparent border-2 border-spotify-lightgray text-spotify-lightgray hover:text-white hover:border-white py-4 px-6 rounded-xl font-semibold transition-all">
+                            انصراف
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Bulk Upload Form -->
+            <div id="bulkForm" class="tab-content hidden">
+                <div class="space-y-6">
+                    <div class="bg-spotify-black p-6 rounded-xl border border-spotify-green border-opacity-30">
+                        <h4 class="text-lg font-semibold mb-3 text-spotify-green">
+                            <i class="fas fa-info-circle ml-2"></i>
+                            راهنمای آپلود دسته‌ای
+                        </h4>
+                        <div class="text-sm text-spotify-lightgray space-y-2">
+                            <p>• هر خط یک آهنگ (حداکثر 100 آهنگ)</p>
+                            <p>• فرمت: <code class="bg-spotify-gray px-2 py-1 rounded">نام آهنگ | نام هنرمند | لینک YouTube</code></p>
+                            <p>• مثال: <code class="bg-spotify-gray px-2 py-1 rounded">Bad Guy | Billie Eilish | https://youtube.com/watch?v=DyDfgMOUjCI</code></p>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold mb-3 text-spotify-lightgray">
+                            <i class="fas fa-list ml-2"></i>لیست آهنگ‌ها
+                            <span id="songCount" class="text-spotify-green">(0/100)</span>
+                        </label>
+                        <textarea id="bulkInput" class="w-full h-64 p-4 bg-spotify-black border border-spotify-lightgray rounded-xl text-base text-white focus:border-spotify-green focus:ring-2 focus:ring-spotify-green focus:ring-opacity-50 transition-all resize-none font-mono" placeholder="نام آهنگ | نام هنرمند | لینک YouTube
+Bad Guy | Billie Eilish | https://youtube.com/watch?v=DyDfgMOUjCI
+Blinding Lights | The Weeknd | https://youtube.com/watch?v=4NRXx6U8ABQ"></textarea>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div id="uploadProgress" class="hidden">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-sm text-spotify-lightgray">در حال اضافه کردن آهنگ‌ها...</span>
+                            <span id="progressText" class="text-sm text-spotify-green">0/0</span>
+                        </div>
+                        <div class="progress-bar rounded-full">
+                            <div id="progressFill" class="progress-fill rounded-full" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Results -->
+                    <div id="uploadResults" class="hidden space-y-3"></div>
+
+                    <div class="flex space-x-4 space-x-reverse">
+                        <button id="bulkAddBtn" class="btn-primary flex-1 text-white py-4 px-6 rounded-xl font-semibold flex items-center justify-center">
+                            <i class="fas fa-upload ml-2"></i>
+                            اضافه کردن همه
+                        </button>
+                        <button id="clearBulkBtn" class="bg-red-600 hover:bg-red-700 text-white py-4 px-6 rounded-xl font-semibold transition-all">
+                            <i class="fas fa-trash ml-2"></i>
+                            پاک کردن
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dark mode detection
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+
+        // Application state
+        let songs = [];
+        let currentSongIndex = -1;
+        let isPlaying = false;
+        let currentPlayer = null;
+
+        // DOM elements
+        const addMusicBtn = document.getElementById('addMusicBtn');
+        const addMusicModal = document.getElementById('addMusicModal');
+        const closeModal = document.getElementById('closeModal');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const addMusicForm = document.getElementById('addMusicForm');
+        const songsContainer = document.getElementById('songsContainer');
+        const musicPlayer = document.getElementById('musicPlayer');
+        const playPauseBtn = document.getElementById('playPauseBtn');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+
+        // Extract YouTube video ID
+        function extractYouTubeId(url) {
+            const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+            const match = url.match(regex);
+            return match ? match[1] : null;
+        }
+
+        // Show modal
+        function showModal() {
+            addMusicModal.classList.remove('hidden');
+            addMusicModal.classList.add('flex');
+        }
+
+        // Hide modal
+        function hideModal() {
+            addMusicModal.classList.add('hidden');
+            addMusicModal.classList.remove('flex');
+            addMusicForm.reset();
+        }
+
+        // Create YouTube player
+        function createYouTubePlayer(videoId, container) {
+            const iframe = document.createElement('iframe');
+            iframe.src = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&controls=0&showinfo=0&rel=0&autoplay=0`;
+            iframe.style.width = '0px';
+            iframe.style.height = '0px';
+            iframe.style.opacity = '0';
+            iframe.style.position = 'absolute';
+            iframe.style.pointerEvents = 'none';
+            container.appendChild(iframe);
+            return iframe;
+        }
+
+        // Play song
+        function playSong(index) {
+            if (index < 0 || index >= songs.length) return;
+            
+            const song = songs[index];
+            currentSongIndex = index;
+
+            // Update player UI
+            document.getElementById('currentSongTitle').textContent = song.title;
+            document.getElementById('currentSongArtist').textContent = song.artist;
+            document.getElementById('currentSongImage').src = `https://img.youtube.com/vi/${song.videoId}/mqdefault.jpg`;
+            
+            // Show player
+            musicPlayer.classList.remove('hidden');
+            
+            // Update play button
+            playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+            isPlaying = true;
+
+            // Highlight current song
+            updateSongHighlight();
+        }
+
+        // Update song highlight
+        function updateSongHighlight() {
+            const songItems = document.querySelectorAll('.song-item');
+            songItems.forEach((item, index) => {
+                if (index === currentSongIndex) {
+                    item.classList.add('bg-spotify-green', 'bg-opacity-20');
+                } else {
+                    item.classList.remove('bg-spotify-green', 'bg-opacity-20');
+                }
+            });
+        }
+
+        // Toggle play/pause
+        function togglePlayPause() {
+            isPlaying = !isPlaying;
+            playPauseBtn.innerHTML = isPlaying ? '<i class="fas fa-pause"></i>' : '<i class="fas fa-play"></i>';
+        }
+
+        // Previous song
+        function prevSong() {
+            if (currentSongIndex > 0) {
+                playSong(currentSongIndex - 1);
+            }
+        }
+
+        // Next song
+        function nextSong() {
+            if (currentSongIndex < songs.length - 1) {
+                playSong(currentSongIndex + 1);
+            }
+        }
+
+        // Add song to list
+        function addSong(title, artist, youtubeUrl) {
+            const videoId = extractYouTubeId(youtubeUrl);
+            if (!videoId) {
+                showAlert('لینک YouTube معتبر نیست');
+                return false;
+            }
+
+            const song = {
+                title,
+                artist,
+                youtubeUrl,
+                videoId,
+                thumbnail: `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`
+            };
+
+            songs.push(song);
+            renderSongs();
+            return true;
+        }
+
+        // Custom alert function
+        function showAlert(message) {
+            const alertModal = document.createElement('div');
+            alertModal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            alertModal.innerHTML = `
+                <div class="bg-spotify-gray p-6 rounded-lg shadow-lg max-w-sm w-full mx-4">
+                    <p class="text-white mb-4">${message}</p>
+                    <div class="flex justify-end">
+                        <button class="px-4 py-2 bg-spotify-green text-white hover:bg-green-600 rounded" onclick="this.closest('.fixed').remove()">باشه</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(alertModal);
+        }
+
+        // Render songs
+        function renderSongs() {
+            if (songs.length === 0) {
+                songsContainer.innerHTML = `
+                    <div class="text-center text-spotify-lightgray py-20">
+                        <i class="fas fa-music text-6xl mb-4 opacity-50"></i>
+                        <p class="text-xl">هنوز موزیکی اضافه نکرده‌اید</p>
+                        <p class="text-sm mt-2">روی دکمه "افزودن موزیک" کلیک کنید تا شروع کنید</p>
+                    </div>
+                `;
+                return;
+            }
+
+            songsContainer.innerHTML = songs.map((song, index) => `
+                <div class="song-item flex items-center p-5 mb-2 cursor-pointer group" onclick="playSong(${index})">
+                    <div class="flex items-center flex-1 min-w-0">
+                        <div class="relative ml-4 flex-shrink-0">
+                            <img src="${song.thumbnail}" alt="${song.title}" class="song-thumbnail w-16 h-16 object-cover">
+                            <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 flex items-center justify-center transition-all duration-300 rounded-lg">
+                                <i class="fas fa-play text-white text-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></i>
+                            </div>
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <h4 class="font-semibold text-white text-lg truncate mb-1">${song.title}</h4>
+                            <p class="text-spotify-lightgray text-sm truncate">${song.artist}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-4 space-x-reverse flex-shrink-0">
+                        <button class="text-spotify-lightgray hover:text-red-400 p-3 rounded-full hover:bg-red-600 hover:bg-opacity-20 transition-all opacity-0 group-hover:opacity-100" onclick="event.stopPropagation(); removeSong(${index})" title="حذف آهنگ">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        <button class="text-spotify-lightgray hover:text-spotify-green p-3 rounded-full hover:bg-spotify-green hover:bg-opacity-20 transition-all opacity-0 group-hover:opacity-100" onclick="event.stopPropagation(); window.open('${song.youtubeUrl}', '_blank')" title="مشاهده در YouTube">
+                            <i class="fab fa-youtube"></i>
+                        </button>
+                        <span class="text-spotify-lightgray text-sm font-mono">3:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Remove song
+        function removeSong(index) {
+            songs.splice(index, 1);
+            if (currentSongIndex === index) {
+                musicPlayer.classList.add('hidden');
+                currentSongIndex = -1;
+            } else if (currentSongIndex > index) {
+                currentSongIndex--;
+            }
+            renderSongs();
+        }
+
+        // Tab functionality
+        const singleTab = document.getElementById('singleTab');
+        const bulkTab = document.getElementById('bulkTab');
+        const singleForm = document.getElementById('singleForm');
+        const bulkForm = document.getElementById('bulkForm');
+        const bulkInput = document.getElementById('bulkInput');
+        const songCount = document.getElementById('songCount');
+        const bulkAddBtn = document.getElementById('bulkAddBtn');
+        const clearBulkBtn = document.getElementById('clearBulkBtn');
+        const uploadProgress = document.getElementById('uploadProgress');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        const uploadResults = document.getElementById('uploadResults');
+
+        function switchTab(activeTab, inactiveTab, activeForm, inactiveForm) {
+            activeTab.classList.add('active', 'text-white');
+            activeTab.classList.remove('text-spotify-lightgray');
+            inactiveTab.classList.remove('active', 'text-white');
+            inactiveTab.classList.add('text-spotify-lightgray');
+            
+            activeForm.classList.remove('hidden');
+            inactiveForm.classList.add('hidden');
+        }
+
+        // Parse bulk input
+        function parseBulkInput(text) {
+            const lines = text.trim().split('\n').filter(line => line.trim());
+            const songs = [];
+            const errors = [];
+
+            lines.forEach((line, index) => {
+                const parts = line.split('|').map(part => part.trim());
+                if (parts.length !== 3) {
+                    errors.push(`خط ${index + 1}: فرمت نادرست`);
+                    return;
+                }
+
+                const [title, artist, url] = parts;
+                if (!title || !artist || !url) {
+                    errors.push(`خط ${index + 1}: اطلاعات ناقص`);
+                    return;
+                }
+
+                const videoId = extractYouTubeId(url);
+                if (!videoId) {
+                    errors.push(`خط ${index + 1}: لینک YouTube نامعتبر`);
+                    return;
+                }
+
+                songs.push({ title, artist, url, videoId });
+            });
+
+            return { songs, errors };
+        }
+
+        // Update song count
+        function updateSongCount() {
+            const lines = bulkInput.value.trim().split('\n').filter(line => line.trim());
+            const count = Math.min(lines.length, 100);
+            songCount.textContent = `(${count}/100)`;
+            songCount.className = count > 100 ? 'text-red-500' : 'text-spotify-green';
+        }
+
+        // Bulk add songs
+        async function bulkAddSongs() {
+            const text = bulkInput.value.trim();
+            if (!text) {
+                showAlert('لطفاً لیست آهنگ‌ها را وارد کنید');
+                return;
+            }
+
+            const { songs: parsedSongs, errors } = parseBulkInput(text);
+            
+            if (parsedSongs.length === 0) {
+                showAlert('هیچ آهنگ معتبری پیدا نشد');
+                return;
+            }
+
+            if (parsedSongs.length > 100) {
+                showAlert('حداکثر 100 آهنگ مجاز است');
+                return;
+            }
+
+            // Show progress
+            uploadProgress.classList.remove('hidden');
+            uploadResults.classList.add('hidden');
+            bulkAddBtn.disabled = true;
+            bulkAddBtn.innerHTML = '<i class="fas fa-spinner fa-spin ml-2"></i>در حال پردازش...';
+
+            let successCount = 0;
+            let errorCount = 0;
+            const results = [];
+
+            for (let i = 0; i < parsedSongs.length; i++) {
+                const song = parsedSongs[i];
+                const progress = ((i + 1) / parsedSongs.length) * 100;
+                
+                progressFill.style.width = `${progress}%`;
+                progressText.textContent = `${i + 1}/${parsedSongs.length}`;
+
+                try {
+                    if (addSong(song.title, song.artist, song.url)) {
+                        successCount++;
+                        results.push({
+                            type: 'success',
+                            message: `✅ ${song.title} - ${song.artist}`
+                        });
+                    } else {
+                        errorCount++;
+                        results.push({
+                            type: 'error',
+                            message: `❌ ${song.title} - ${song.artist}: لینک نامعتبر`
+                        });
+                    }
+                } catch (error) {
+                    errorCount++;
+                    results.push({
+                        type: 'error',
+                        message: `❌ ${song.title} - ${song.artist}: خطا در پردازش`
+                    });
+                }
+
+                // Add small delay to show progress
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+
+            // Add parsing errors
+            errors.forEach(error => {
+                results.push({
+                    type: 'error',
+                    message: `❌ ${error}`
+                });
+                errorCount++;
+            });
+
+            // Show results
+            uploadProgress.classList.add('hidden');
+            uploadResults.classList.remove('hidden');
+            uploadResults.innerHTML = `
+                <div class="bg-spotify-black p-4 rounded-xl">
+                    <h4 class="text-lg font-semibold mb-3">نتایج آپلود</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div class="text-center p-3 bg-green-600 bg-opacity-20 rounded-lg">
+                            <div class="text-2xl font-bold text-green-400">${successCount}</div>
+                            <div class="text-sm text-green-300">موفق</div>
+                        </div>
+                        <div class="text-center p-3 bg-red-600 bg-opacity-20 rounded-lg">
+                            <div class="text-2xl font-bold text-red-400">${errorCount}</div>
+                            <div class="text-sm text-red-300">ناموفق</div>
+                        </div>
+                    </div>
+                    <div class="max-h-40 overflow-y-auto scrollbar-hide space-y-1">
+                        ${results.map(result => `
+                            <div class="text-sm p-2 rounded ${result.type === 'success' ? 'text-green-300 bg-green-600 bg-opacity-10' : 'text-red-300 bg-red-600 bg-opacity-10'}">
+                                ${result.message}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+
+            // Reset button
+            bulkAddBtn.disabled = false;
+            bulkAddBtn.innerHTML = '<i class="fas fa-upload ml-2"></i>اضافه کردن همه';
+
+            if (successCount > 0) {
+                setTimeout(() => {
+                    hideModal();
+                    uploadResults.classList.add('hidden');
+                    bulkInput.value = '';
+                    updateSongCount();
+                }, 3000);
+            }
+        }
+
+        // Event listeners
+        addMusicBtn.addEventListener('click', showModal);
+        closeModal.addEventListener('click', hideModal);
+        cancelBtn.addEventListener('click', hideModal);
+
+        singleTab.addEventListener('click', () => {
+            switchTab(singleTab, bulkTab, singleForm, bulkForm);
+        });
+
+        bulkTab.addEventListener('click', () => {
+            switchTab(bulkTab, singleTab, bulkForm, singleForm);
+        });
+
+        bulkInput.addEventListener('input', updateSongCount);
+
+        bulkAddBtn.addEventListener('click', bulkAddSongs);
+
+        clearBulkBtn.addEventListener('click', () => {
+            bulkInput.value = '';
+            updateSongCount();
+            uploadResults.classList.add('hidden');
+            uploadProgress.classList.add('hidden');
+        });
+
+        addMusicForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const title = document.getElementById('songTitle').value;
+            const artist = document.getElementById('artistName').value;
+            const youtubeUrl = document.getElementById('youtubeUrl').value;
+
+            if (addSong(title, artist, youtubeUrl)) {
+                hideModal();
+            }
+        });
+
+        playPauseBtn.addEventListener('click', togglePlayPause);
+        prevBtn.addEventListener('click', prevSong);
+        nextBtn.addEventListener('click', nextSong);
+
+        // Close modal on outside click
+        addMusicModal.addEventListener('click', (e) => {
+            if (e.target === addMusicModal) {
+                hideModal();
+            }
+        });
+
+        // Initialize
+        renderSongs();
+        updateSongCount();
+    </script>
+</body>
+</html>
