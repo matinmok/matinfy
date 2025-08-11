@@ -299,14 +299,18 @@
             </div>
             
             <!-- Tab Navigation -->
-            <div class="flex mb-6 bg-spotify-black rounded-xl p-1">
-                <button id="singleTab" class="tab-button active flex-1 py-3 px-4 text-center font-semibold rounded-lg transition-all text-white">
+            <div class="grid grid-cols-3 mb-6 bg-spotify-black rounded-xl p-1">
+                <button id="singleTab" class="tab-button active py-3 px-2 text-center font-semibold rounded-lg transition-all text-white">
                     <i class="fas fa-music ml-2"></i>
-                    تک آهنگ
+                    لینک YouTube
                 </button>
-                <button id="bulkTab" class="tab-button flex-1 py-3 px-4 text-center font-semibold rounded-lg transition-all text-spotify-lightgray">
+                <button id="bulkTab" class="tab-button py-3 px-2 text-center font-semibold rounded-lg transition-all text-spotify-lightgray">
                     <i class="fas fa-list-ul ml-2"></i>
                     آپلود دسته‌ای
+                </button>
+                <button id="fileTab" class="tab-button py-3 px-2 text-center font-semibold rounded-lg transition-all text-spotify-lightgray">
+                    <i class="fas fa-file-audio ml-2"></i>
+                    آپلود فایل
                 </button>
             </div>
 
@@ -395,6 +399,79 @@ Blinding Lights | The Weeknd | https://youtube.com/watch?v=4NRXx6U8ABQ"></textar
                         <button id="clearBulkBtn" class="bg-red-600 hover:bg-red-700 text-white py-4 px-6 rounded-xl font-semibold transition-all">
                             <i class="fas fa-trash ml-2"></i>
                             پاک کردن
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- File Upload Form -->
+            <div id="fileForm" class="tab-content hidden">
+                <div class="space-y-6">
+                    <div class="bg-spotify-black p-6 rounded-xl border border-blue-500 border-opacity-30">
+                        <h4 class="text-lg font-semibold mb-3 text-blue-400">
+                            <i class="fas fa-file-audio ml-2"></i>
+                            راهنمای آپلود فایل
+                        </h4>
+                        <div class="text-sm text-spotify-lightgray space-y-2">
+                            <p>• فرمت‌های پشتیبانی شده: MP3, WAV, OGG, M4A, FLAC</p>
+                            <p>• حداکثر حجم هر فایل: 50 مگابایت</p>
+                            <p>• حداکثر 50 فایل همزمان</p>
+                            <p>• فایل‌ها در مرورگر شما ذخیره می‌شوند</p>
+                        </div>
+                    </div>
+
+                    <!-- File Drop Zone -->
+                    <div id="fileDropZone" class="border-2 border-dashed border-spotify-lightgray rounded-xl p-8 text-center transition-all hover:border-blue-400 hover:bg-blue-600 hover:bg-opacity-5">
+                        <i class="fas fa-cloud-upload-alt text-6xl text-spotify-lightgray mb-4"></i>
+                        <h3 class="text-xl font-semibold text-white mb-2">فایل‌های موزیک را اینجا بکشید</h3>
+                        <p class="text-spotify-lightgray mb-4">یا روی دکمه زیر کلیک کنید</p>
+                        <input type="file" id="fileInput" class="hidden" accept="audio/*" multiple>
+                        <button type="button" id="fileSelectBtn" class="btn-primary px-6 py-3 rounded-xl font-semibold">
+                            <i class="fas fa-folder-open ml-2"></i>
+                            انتخاب فایل‌ها
+                        </button>
+                    </div>
+
+                    <!-- Selected Files List -->
+                    <div id="selectedFiles" class="hidden">
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 class="text-lg font-semibold text-white">
+                                <i class="fas fa-list ml-2"></i>
+                                فایل‌های انتخاب شده
+                                <span id="fileCount" class="text-blue-400">(0/50)</span>
+                            </h4>
+                            <button id="clearFilesBtn" class="text-red-400 hover:text-red-300 transition-colors">
+                                <i class="fas fa-trash ml-1"></i>
+                                پاک کردن همه
+                            </button>
+                        </div>
+                        <div id="filesList" class="max-h-64 overflow-y-auto scrollbar-hide bg-spotify-black rounded-xl p-4 space-y-2">
+                            <!-- Files will be listed here -->
+                        </div>
+                    </div>
+
+                    <!-- File Upload Progress -->
+                    <div id="fileUploadProgress" class="hidden">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-sm text-spotify-lightgray">در حال پردازش فایل‌ها...</span>
+                            <span id="fileProgressText" class="text-sm text-blue-400">0/0</span>
+                        </div>
+                        <div class="progress-bar rounded-full">
+                            <div id="fileProgressFill" class="progress-fill rounded-full" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <!-- File Upload Results -->
+                    <div id="fileUploadResults" class="hidden space-y-3"></div>
+
+                    <div class="flex space-x-4 space-x-reverse">
+                        <button id="processFilesBtn" class="btn-primary flex-1 text-white py-4 px-6 rounded-xl font-semibold flex items-center justify-center" disabled>
+                            <i class="fas fa-cogs ml-2"></i>
+                            پردازش فایل‌ها
+                        </button>
+                        <button id="clearAllFilesBtn" class="bg-red-600 hover:bg-red-700 text-white py-4 px-6 rounded-xl font-semibold transition-all">
+                            <i class="fas fa-trash ml-2"></i>
+                            حذف همه
                         </button>
                     </div>
                 </div>
@@ -612,8 +689,10 @@ Blinding Lights | The Weeknd | https://youtube.com/watch?v=4NRXx6U8ABQ"></textar
         // Tab functionality
         const singleTab = document.getElementById('singleTab');
         const bulkTab = document.getElementById('bulkTab');
+        const fileTab = document.getElementById('fileTab');
         const singleForm = document.getElementById('singleForm');
         const bulkForm = document.getElementById('bulkForm');
+        const fileForm = document.getElementById('fileForm');
         const bulkInput = document.getElementById('bulkInput');
         const songCount = document.getElementById('songCount');
         const bulkAddBtn = document.getElementById('bulkAddBtn');
@@ -622,6 +701,26 @@ Blinding Lights | The Weeknd | https://youtube.com/watch?v=4NRXx6U8ABQ"></textar
         const progressFill = document.getElementById('progressFill');
         const progressText = document.getElementById('progressText');
         const uploadResults = document.getElementById('uploadResults');
+
+        // File upload elements
+        const fileDropZone = document.getElementById('fileDropZone');
+        const fileInput = document.getElementById('fileInput');
+        const fileSelectBtn = document.getElementById('fileSelectBtn');
+        const selectedFiles = document.getElementById('selectedFiles');
+        const filesList = document.getElementById('filesList');
+        const fileCount = document.getElementById('fileCount');
+        const clearFilesBtn = document.getElementById('clearFilesBtn');
+        const processFilesBtn = document.getElementById('processFilesBtn');
+        const clearAllFilesBtn = document.getElementById('clearAllFilesBtn');
+        const fileUploadProgress = document.getElementById('fileUploadProgress');
+        const fileProgressFill = document.getElementById('fileProgressFill');
+        const fileProgressText = document.getElementById('fileProgressText');
+        const fileUploadResults = document.getElementById('fileUploadResults');
+
+        // File upload state
+        let selectedAudioFiles = [];
+        const MAX_FILES = 50;
+        const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 
         function switchTab(activeTab, inactiveTab, activeForm, inactiveForm) {
             activeTab.classList.add('active', 'text-white');
@@ -784,6 +883,237 @@ Blinding Lights | The Weeknd | https://youtube.com/watch?v=4NRXx6U8ABQ"></textar
             }
         }
 
+        // File upload functions
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function isValidAudioFile(file) {
+            const validTypes = ['audio/mpeg', 'audio/wav', 'audio/ogg', 'audio/m4a', 'audio/flac', 'audio/mp3'];
+            const validExtensions = ['.mp3', '.wav', '.ogg', '.m4a', '.flac'];
+            
+            const fileName = file.name.toLowerCase();
+            const isValidType = validTypes.includes(file.type) || validExtensions.some(ext => fileName.endsWith(ext));
+            const isValidSize = file.size <= MAX_FILE_SIZE;
+            
+            return { isValidType, isValidSize };
+        }
+
+        function updateFileCount() {
+            fileCount.textContent = `(${selectedAudioFiles.length}/${MAX_FILES})`;
+            fileCount.className = selectedAudioFiles.length > MAX_FILES ? 'text-red-400' : 'text-blue-400';
+            processFilesBtn.disabled = selectedAudioFiles.length === 0;
+        }
+
+        function addFilesToList(files) {
+            for (const file of files) {
+                if (selectedAudioFiles.length >= MAX_FILES) {
+                    showAlert(`حداکثر ${MAX_FILES} فایل مجاز است`);
+                    break;
+                }
+
+                const { isValidType, isValidSize } = isValidAudioFile(file);
+                
+                if (!isValidType) {
+                    showAlert(`فرمت فایل ${file.name} پشتیبانی نمی‌شود`);
+                    continue;
+                }
+
+                if (!isValidSize) {
+                    showAlert(`حجم فایل ${file.name} بیش از حد مجاز است (${formatFileSize(MAX_FILE_SIZE)})`);
+                    continue;
+                }
+
+                // Check for duplicates
+                if (selectedAudioFiles.some(f => f.name === file.name && f.size === file.size)) {
+                    continue;
+                }
+
+                selectedAudioFiles.push(file);
+            }
+
+            renderFilesList();
+            updateFileCount();
+        }
+
+        function renderFilesList() {
+            if (selectedAudioFiles.length === 0) {
+                selectedFiles.classList.add('hidden');
+                return;
+            }
+
+            selectedFiles.classList.remove('hidden');
+            filesList.innerHTML = selectedAudioFiles.map((file, index) => `
+                <div class="flex items-center justify-between p-3 bg-spotify-gray rounded-lg">
+                    <div class="flex items-center flex-1 min-w-0">
+                        <i class="fas fa-file-audio text-blue-400 ml-3 flex-shrink-0"></i>
+                        <div class="min-w-0 flex-1">
+                            <p class="font-medium text-white truncate">${file.name}</p>
+                            <p class="text-sm text-spotify-lightgray">${formatFileSize(file.size)}</p>
+                        </div>
+                    </div>
+                    <button class="text-red-400 hover:text-red-300 p-2 rounded-full hover:bg-red-600 hover:bg-opacity-20 transition-all" onclick="removeFile(${index})" title="حذف فایل">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function removeFile(index) {
+            selectedAudioFiles.splice(index, 1);
+            renderFilesList();
+            updateFileCount();
+        }
+
+        function clearAllFiles() {
+            selectedAudioFiles = [];
+            renderFilesList();
+            updateFileCount();
+            fileUploadResults.classList.add('hidden');
+            fileUploadProgress.classList.add('hidden');
+        }
+
+        async function extractMetadata(file) {
+            return new Promise((resolve) => {
+                const audio = new Audio();
+                const url = URL.createObjectURL(file);
+                
+                audio.addEventListener('loadedmetadata', () => {
+                    const fileName = file.name.replace(/\.[^/.]+$/, "");
+                    const parts = fileName.split(' - ');
+                    
+                    let title = fileName;
+                    let artist = 'نامشخص';
+                    
+                    if (parts.length >= 2) {
+                        artist = parts[0].trim();
+                        title = parts.slice(1).join(' - ').trim();
+                    }
+                    
+                    resolve({
+                        title,
+                        artist,
+                        duration: audio.duration,
+                        file,
+                        url
+                    });
+                });
+
+                audio.addEventListener('error', () => {
+                    resolve({
+                        title: file.name.replace(/\.[^/.]+$/, ""),
+                        artist: 'نامشخص',
+                        duration: 0,
+                        file,
+                        url
+                    });
+                });
+
+                audio.src = url;
+            });
+        }
+
+        function addFileToSongs(metadata) {
+            const song = {
+                title: metadata.title,
+                artist: metadata.artist,
+                youtubeUrl: null,
+                videoId: null,
+                thumbnail: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiBmaWxsPSIjMjgyODI4Ii8+CjxwYXRoIGQ9Ik00MCA2MEw2MCA1MEw0MCA0MFY2MFoiIGZpbGw9IiMxREI5NTQiLz4KPHN2Zz4K',
+                isLocalFile: true,
+                localFileUrl: metadata.url,
+                duration: metadata.duration
+            };
+
+            songs.push(song);
+            renderSongs();
+        }
+
+        async function processFiles() {
+            if (selectedAudioFiles.length === 0) {
+                showAlert('لطفاً فایل‌هایی را انتخاب کنید');
+                return;
+            }
+
+            // Show progress
+            fileUploadProgress.classList.remove('hidden');
+            fileUploadResults.classList.add('hidden');
+            processFilesBtn.disabled = true;
+            processFilesBtn.innerHTML = '<i class="fas fa-spinner fa-spin ml-2"></i>در حال پردازش...';
+
+            let successCount = 0;
+            let errorCount = 0;
+            const results = [];
+
+            for (let i = 0; i < selectedAudioFiles.length; i++) {
+                const file = selectedAudioFiles[i];
+                const progress = ((i + 1) / selectedAudioFiles.length) * 100;
+                
+                fileProgressFill.style.width = `${progress}%`;
+                fileProgressText.textContent = `${i + 1}/${selectedAudioFiles.length}`;
+
+                try {
+                    const metadata = await extractMetadata(file);
+                    addFileToSongs(metadata);
+                    successCount++;
+                    results.push({
+                        type: 'success',
+                        message: `✅ ${metadata.title} - ${metadata.artist}`
+                    });
+                } catch (error) {
+                    errorCount++;
+                    results.push({
+                        type: 'error',
+                        message: `❌ ${file.name}: خطا در پردازش فایل`
+                    });
+                }
+
+                // Add small delay to show progress
+                await new Promise(resolve => setTimeout(resolve, 200));
+            }
+
+            // Show results
+            fileUploadProgress.classList.add('hidden');
+            fileUploadResults.classList.remove('hidden');
+            fileUploadResults.innerHTML = `
+                <div class="bg-spotify-black p-4 rounded-xl">
+                    <h4 class="text-lg font-semibold mb-3">نتایج پردازش فایل‌ها</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div class="text-center p-3 bg-green-600 bg-opacity-20 rounded-lg">
+                            <div class="text-2xl font-bold text-green-400">${successCount}</div>
+                            <div class="text-sm text-green-300">موفق</div>
+                        </div>
+                        <div class="text-center p-3 bg-red-600 bg-opacity-20 rounded-lg">
+                            <div class="text-2xl font-bold text-red-400">${errorCount}</div>
+                            <div class="text-sm text-red-300">ناموفق</div>
+                        </div>
+                    </div>
+                    <div class="max-h-40 overflow-y-auto scrollbar-hide space-y-1">
+                        ${results.map(result => `
+                            <div class="text-sm p-2 rounded ${result.type === 'success' ? 'text-green-300 bg-green-600 bg-opacity-10' : 'text-red-300 bg-red-600 bg-opacity-10'}">
+                                ${result.message}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+
+            // Reset button
+            processFilesBtn.disabled = false;
+            processFilesBtn.innerHTML = '<i class="fas fa-cogs ml-2"></i>پردازش فایل‌ها';
+
+            if (successCount > 0) {
+                setTimeout(() => {
+                    hideModal();
+                    clearAllFiles();
+                }, 3000);
+            }
+        }
+
         // Event listeners
         addMusicBtn.addEventListener('click', showModal);
         closeModal.addEventListener('click', hideModal);
@@ -791,11 +1121,59 @@ Blinding Lights | The Weeknd | https://youtube.com/watch?v=4NRXx6U8ABQ"></textar
 
         singleTab.addEventListener('click', () => {
             switchTab(singleTab, bulkTab, singleForm, bulkForm);
+            switchTab(singleTab, fileTab, singleForm, fileForm);
         });
 
         bulkTab.addEventListener('click', () => {
             switchTab(bulkTab, singleTab, bulkForm, singleForm);
+            switchTab(bulkTab, fileTab, bulkForm, fileForm);
         });
+
+        fileTab.addEventListener('click', () => {
+            switchTab(fileTab, singleTab, fileForm, singleForm);
+            switchTab(fileTab, bulkTab, fileForm, bulkForm);
+        });
+
+        // File upload events
+        fileSelectBtn.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                addFilesToList(Array.from(e.target.files));
+            }
+        });
+
+        // Drag and drop
+        fileDropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            fileDropZone.classList.add('border-blue-400', 'bg-blue-600', 'bg-opacity-10');
+        });
+
+        fileDropZone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            fileDropZone.classList.remove('border-blue-400', 'bg-blue-600', 'bg-opacity-10');
+        });
+
+        fileDropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            fileDropZone.classList.remove('border-blue-400', 'bg-blue-600', 'bg-opacity-10');
+            
+            const files = Array.from(e.dataTransfer.files).filter(file => 
+                file.type.startsWith('audio/') || ['.mp3', '.wav', '.ogg', '.m4a', '.flac'].some(ext => 
+                    file.name.toLowerCase().endsWith(ext)
+                )
+            );
+            
+            if (files.length > 0) {
+                addFilesToList(files);
+            }
+        });
+
+        clearFilesBtn.addEventListener('click', clearAllFiles);
+        clearAllFilesBtn.addEventListener('click', clearAllFiles);
+        processFilesBtn.addEventListener('click', processFiles);
 
         bulkInput.addEventListener('input', updateSongCount);
 
@@ -833,6 +1211,7 @@ Blinding Lights | The Weeknd | https://youtube.com/watch?v=4NRXx6U8ABQ"></textar
         // Initialize
         renderSongs();
         updateSongCount();
+        updateFileCount();
     </script>
 </body>
 </html>
